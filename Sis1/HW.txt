@@ -1,0 +1,66 @@
+JMP main
+
+fifo:   DW 0
+size: DW 0
+last: DW 0
+first: DW 0
+
+init:
+		MOV [first], fifo	;fifo premaknem v [first] "CE SO OKLEPAJI "[]" DOSTOPAM DO POMNILNIKA"
+		MOV [size], 0		;prvo dam [size] na 0
+        MOV [size], A		;vrednost, ki je v A je skopirana na [size]
+        MOV [first], 0		;prvi je 0 -> first = last = 0;
+        MOV [last], 0		;zadnji je 0
+        
+clear:
+		MOV [first], 0		;first = last = 0; Prekopira vrednost 0 na [first]
+        MOV [last], 0	
+        JMP done
+        
+push:
+		POP D			;povratni naslov
+        POP A			;fifo[last] = x; -> Pops a 16-bits value from the top of the stack and stores it into the 16-bits register referenced by Operand 1
+        PUSH D			;vrni povratni naslov
+       
+        MOV C, fifo		;if (++last >= size) last = 0;
+        ADD C, [last]	;seštejem C in [last]
+        MOV [C], A
+        MOV C, [last]	;[last] v C
+        INC C			;povecam C oz [last]
+        MOV D, [size]	;vrednost size dam v D
+        CMP C, D
+        JAE lastElement
+        PUSH D			;ker smo dali size v D -> vrne vrednost: A, ki je naš SIZE!
+        JMP done
+            
+lastElement:
+		MOV [last], 0	;last = 0; v pushu piše: "zadnji element enak 0"! ideja: Klicali to funkcijo in ga resetirali
+        JMP done 
+        
+queue:
+	CALL init		;pripravim za vrsto da jo zapolnim s števili
+
+loop:
+	ADD A, 1 		;vsakic ko dobim A ga povecam za 1
+    CMP A, 10 		;primerjava ce je A manj ali enako 10
+    JA break		;jump if above
+    PUSH A 			;to pop out after call
+    PUSH A 			;
+    CALL push
+    POP B 			;index izpišem na B, ker A dobi 11
+    JMP loop
+    
+break:
+	JMP done
+
+main:
+		MOV SP, 0x02df	;inicializacija sklada
+		CALL queue
+        JMP finish
+
+done:        
+        RET		;Returns from a subroutine.
+        
+finish:
+		HLT
+

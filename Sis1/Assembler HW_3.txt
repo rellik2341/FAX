@@ -1,0 +1,90 @@
+JMP main
+
+;-------------------------------------------------------------------
+;Shranjen naslov animacije
+
+string:
+	DB "   ANIMATION!"	;string oz. naslov
+    DB "      COUNTDOWN!"
+    DB 0				;konec stringa
+        
+;-------------------------------------------------------------------
+;Gledam v keycheker če je pritisnjena * tipka
+;če je bila pritisnjena nadaljujem s programom in skoči na printstr
+;kjer v A naložim string ki nosi besedilo in potem ga loopstr izpiše
+
+printstr:
+		MOV A, string	;string point to A
+        MOV B, 0x2E0	;B kot izhod
+
+loopstr:
+		MOVB CL, [A]	;pridobi string iz A 
+		MOVB [B], CL	;izpiši na zaslon
+		INC A			;se premikam po stringu od začetka proti koncu 1,2,3,4,5...
+    	INC B			;se premikam na zaslonu po ena dalje da ima vsaka črka svoj prostor
+		CMPB DL, [A]	;poglej, če je konec stringa
+		JNZ loopstr		;skoči nazaj na zanko če ni
+		RET
+        
+keycheker:
+		MOV A, 1		;nastavim, da lahko počistim prekinitve
+        OUT 2			;počistim prekinitev
+        IN 6			;pogledam kaj je bilo pritisnjeno
+        CMP A, 0x2A		;preverim če je bil simbol * pritisnjen
+        JNE keycheker	;če NE preverim še enkrat
+        JMP printstr	;če ja printam naslov in nadaljujem sekvenco
+
+;----------------------------------------------------------------
+;Tukaj je main, ki nam najprej pripravi sklad nato pa preko njega
+;kličemo funkciji keycheker in startani (za zdaj)
+
+main:
+		MOV SP, 0x02df	;inicializacija sklada
+        PUSH A			;shranim si A iz preventive
+        ;MOV A, 1		;postavim se na tipkovnico omogočim prekinitve
+        ;OUT 0			;prekinitve za tipkovnico omogočim
+        ;STI			;globalno omogočim ampak ->Exception occurred while in supervisor mode: Invalid first operand: register index 32 out of bounds
+		CALL keycheker
+        CALL startani
+        CALL end
+
+;----------------------------------------------------------------
+;Tukaj je funkcija cleardis, ki je namenjena da spremeni barvo dis v belo
+;startani, bi pa naj začela animacijo... za zdaj pobarva dis v rdečo
+;D od 300 do 400!
+
+cleardis:
+		MOVB AL, 0xFF	;white
+        MOV D, 0x0300	;D na izhod 0x0300 nastavim na zaslon
+        JMP clearloop	;skoči na naš loop, ki spremeni display v belo
+        
+startani:
+		MOVB AL, 0xC4	;red
+        MOV D, 0x0300	;D na izhod 0x0300 nastavim na zaslon
+        JMP loopani		;skoči na loop ki izriše barvo
+
+loopani:
+        MOVB [D], AL
+		;INC C			;če se c poveča za 1 se spremeni barva -> NOT ok....
+		INC D			;hodim od pixla do pixla
+		CMP D, 0x0400	;zadnji naslov ko je dosežen exit loop
+		JNZ loopani
+		RET
+        
+end:
+		JMP cleardis
+        
+clearloop:
+		MOVB [D], AL
+        INC D
+        CMP D, 0x0400
+        JNZ clearloop
+        HLT
+
+
+
+        
+
+
+
+

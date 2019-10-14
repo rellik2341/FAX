@@ -1,0 +1,50 @@
+JMP main
+
+first:
+	DW 0
+    
+last:
+	DW 0
+    
+size:
+	DW 0
+    
+fifo:
+	DW 0
+	DW 0
+	DW 0
+	DW 0
+	DW 0
+
+init:
+	MOV [first], fifo
+	MOV [size], 0
+	MOV A, 10			;size = initSize
+    MOV B, 0			;first = 0
+	MOV C, 0 			;Last = 0
+    RET
+    
+clear:
+    MOV [first],0				;first
+    MOV [last],0				;last
+    RET
+    
+push:
+	POP D
+	POP A   ; x
+	PUSH D
+	MOV C, fifo
+	ADD C, [last]
+	MOV [C], A
+	MOV C, [last]
+	INC C
+	MOV D, [size]
+	CMP C, D
+	JAE resetlast
+	RET
+  
+resetlast:
+	MOV [last], 0
+	RET
+
+main:

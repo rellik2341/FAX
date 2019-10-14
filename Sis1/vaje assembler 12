@@ -1,0 +1,156 @@
+VAJE 12
+;--------------------------------------------NALOGA 1-----------------------------------------------
+
+JMP main
+
+i:	DW 7
+
+p1:	DW i ;shrani lokacijo spremenljivke i, ki je v tem primeru 0x0003
+
+p2:	DW i ;shrani lokacijo spremenljivke i, ki je v tem primeru 0x0003
+
+main:
+	;p1++
+	MOV D, [p1] ;naložimo naslov, ki ga hrani p1 (naslov spremenljivke)
+    MOV A, [D]  ;Preberemo vrednost, ki se nahaja na tem naslovu (D)
+	INC A		;povečamo za 1
+    MOV [D], A	;zapišemo novo vrednost nazaj
+    
+    ;p2++
+    MOV D, [p2]	;naložimo naslov, ki ga hrani p2 (naslov spremenljivke i)
+    INC D		;povečamo naslov, p2 sedaj kaže drugače
+    MOV [p2], D	;zapišemo nov naslov nazaj
+    HLT
+
+;--------------------------------------------NALOGA 2-----------------------------------------------
+
+JMP main	;požre 1b
+
+i:	DW 7 ;int i = 7
+j: DW 7	;int j = 7		;vsaka spremenljivka zasede 2 bajta
+
+p1:	DW i ;int *p1 = &i shrani lokacijo spremenljivke i, ki je v tem primeru i: 0x0003
+p2:	DW j ;int *p2 = &j shrani lokacijo spremenljivke i, ki je v tem primeru j: 0x0005
+
+main:	;požre 2b
+	; p1 == p2
+    MOV A, [p1]
+    MOV B, [p2]
+    CMP A, B 	;če sta enaka se zastavica postavi na 1
+    
+    
+    ;*p1 == p2*
+    MOV A, [p1]
+    MOV B, [p2]
+	MOV C, [A]
+    MOV D, [B]
+    CMP C, D
+    
+    HLT
+
+;--------------------------------------------NALOGA 3-----------------------------------------------
+
+;int main(in argc, char * argv[]) {...}
+
+;char s[] = "hello"		/*;C obravnava spremenljivko s, kot če bi bila definirana kot kazalec*/
+; char *s;
+;vsak niz (string) je zaključen z vrednostjo 0, zato lahko ugotovimo njegovo velikost.
+;glej v spomni, shranijo se od 1 do A, ker je hexadecimalno, nato se po končani operaciji obrnejo.
+
+
+JMP main
+
+arr:
+	DW 1	;arr[0] = 10		;int arr[] = (10, 20, 30, 40, 50, 60, 70, 80, 90, 100) 
+    DW 2	;arr[1] = 20
+	DW 3	;arr[2] = 30
+    DW 4	;arr[3] = 40
+    DW 5	;arr[4] = 50
+    DW 6	;arr[5] = 60
+    DW 7	;arr[6] = 70
+    DW 8	;arr[7] = 80
+    DW 9	;arr[8] = 90
+	DW 10	;arr[9] = 100
+    
+brr:
+	ORG 0x0100	;na kateri naslov pospravi kodo ki sledi.
+    ;med naslovom brr in main imam nekaj prostora ()
+
+
+main:	;nahaja se na naslovu 0x0100
+	MOV SP, 0x02df
+    MOV A, arr
+    MOV B, 10
+    CALL invert	;invert(arr, 10)
+	HLT
+    
+invert:		;kazalec na prvi element posredujemo preko registra A
+			;število elementov posredujemo preko registra B
+            ;ničesar ne vračamo
+      
+      PUSH A	;register A potrebujemo za množenje! Zato ga shranimo na sklad
+      MOV A, B	; velikost tabele v register A -> A=B
+      DEC A		;velikost = velikost -1 -> A=B-1
+      MUL 2		;A=(B-1) * 2	MUL DELUJE SAMO NA A!!!!!!!!!!!!!!!!!!!!!!!!!!
+      MOV C, A	;C = (B-1)*2
+      POP A		;kazalec na prvi element
+      ADD C, A	;C = A +(B - 1) * 2
+loop:      
+      CMP A, C	;A < C?
+      JA exit	;če pogoj NE drži, zaključi zanko
+      MOV B, [A]	;v B naložimo vrednost na katero kaže A
+      MOV D, [C]	; v D naložimo vrednost na katero kaže C.
+      MOV [A], D	;shranimo ravno obratno
+      MOV [C], B
+      ADD A, 2		;A povečamo na naslednji element
+      SUB C, 2		; C zmanjšamo na predhodni element
+      JMP loop
+      
+exit:
+	RET
+;--------------------------------------------NALOGA 4-----------------------------------------------
+;nismo je rešili na vajah
+
+;--------------------------------------------NALOGA 5-----------------------------------------------
+
+JMP main
+
+;str:	;chr str[] = "Hello"
+;		DB 72	;H	ASCII
+;       DB 101	;e
+;       DB 108	;l
+;   	DB 108	;l
+;		DB 111	;o
+;	    DB 0	;zaključek niza
+        
+str:	;alternativna boljša možnost
+	DB "Hello"
+    DB 0
+
+;str:	;še ena možnost
+;	DB "Hello\0x00"
+
+main:
+		MOV SP, 0x02df
+		MOV A, str
+        CALL strlen
+        HLT
+        
+        
+strlen:		;parameter str prenesemo preko registr A
+			; vrednost vrnemo preko registra A
+		
+        MOV B, A 	;B <- A
+loop:
+        MOVB CL, [A];Preberemo vrednost *A
+        CMPB CL, 0	;konec niza?
+        JE exit		;če da, končamo
+        INC A		;A++
+        JMP loop	;while loop
+exit:
+        SUB A, B	;A = A - B
+        
+		RET			;return A
+
+;--------------------------------------------NALOGA 6-----------------------------------------------
+;nismo je rešili na vajah
